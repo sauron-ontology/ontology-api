@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+
+name: CI - Ontology API unit tests
+
+run-name: Unit tests for Sauron Ontology API
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test-ontology-api:
+    name: Test Ontology API
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Configure .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore dependencies
+        run: dotnet restore ./sauron-api.sln
+
+      - name: Build solution
+        run: dotnet build ./sauron-api.sln --no-restore
+
+      - name: Execute NUnit unit tests
+        run: >
+          dotnet test ./sauron-api.sln
+          --no-build
+          --no-restore
+          --filter "TestCategory=Unit"
